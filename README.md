@@ -17,11 +17,6 @@ With a single click, you can see exactly how many hours went into VS Code, Chrom
 - 🎨 Modern, Clean UI – A clutter‑free interface with a sortable table, total time summary, and clear status indicators.
 - 🚀 Standalone Executable – Package the app as a single .exe file – no Python installation required on the target machine.
 
----
-
-## 📸 Screenshots
-
-*(Add your own screenshots here – e.g., main window, chart window)*
 
 ---
 
