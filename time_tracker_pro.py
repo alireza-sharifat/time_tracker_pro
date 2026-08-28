@@ -11,9 +11,7 @@ import win32gui
 import win32process
 import psutil
 
-
 class TimeTrackerApp:
-    # Keywords to detect websites inside browsers
     SITE_KEYWORDS = {
         "youtube": "YouTube",
         "netflix": "Netflix",
@@ -37,25 +35,17 @@ class TimeTrackerApp:
         self.root.geometry("750x620")
         self.root.configure(bg="#f0f4f8")
 
-        # Data storage: key = app name, value = seconds
         self.times = {}
         self.lock = threading.Lock()
 
-        # Control flags
         self.running = False
         self.current_app = None
 
-        # Load today's data
         self.load_today_data()
-
-        # Build GUI
         self.create_widgets()
-
-        # Start periodic UI refresh
         self.update_display()
 
     def get_active_window_info(self):
-        """Return (window_title, process_name) or (None, None)."""
         try:
             hwnd = win32gui.GetForegroundWindow()
             if hwnd == 0:
@@ -71,37 +61,27 @@ class TimeTrackerApp:
             return None, None
 
     def get_app_name(self, title, process_name):
-        """
-        Determine a clean display name for the current window.
-        Priority: 1) site keyword in title, 2) clean process name.
-        """
         if not title and not process_name:
             return None
 
-        # 1. Check title for site keywords
         if title:
             title_lower = title.lower()
             for keyword, display in self.SITE_KEYWORDS.items():
                 if keyword in title_lower:
                     return display
 
-        # 2. Use process name (remove .exe, capitalize nicely)
         if process_name:
             base = process_name.replace(".exe", "").replace(".EXE", "")
-            # Capitalize first letter, keep rest as is (e.g., "Code" for "code.exe")
             if base:
-                # Special case: if it's all caps, make it title case
                 if base.isupper():
                     base = base.capitalize()
                 else:
-                    # Some names are like "chrome" -> "Chrome"
                     base = base[0].upper() + base[1:] if len(base) > 1 else base.upper()
                 return base
 
         return "Unknown"
 
     def track_loop(self):
-        """Background thread: every second, record the active app."""
         while self.running:
             title, process_name = self.get_active_window_info()
             if title and process_name:
@@ -112,10 +92,8 @@ class TimeTrackerApp:
                             self.times[app_name] = 0
                         self.times[app_name] += 1
                         self.current_app = app_name
-            # If no window is active, we do nothing (no time counted)
             time.sleep(1)
 
-    # ---------- GUI Creation ----------
     def create_widgets(self):
         style = ttk.Style()
         style.theme_use("clam")
@@ -126,7 +104,6 @@ class TimeTrackerApp:
         main_frame = tk.Frame(self.root, bg="#f0f4f8")
         main_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=15)
 
-        # Buttons
         btn_frame = tk.Frame(main_frame, bg="#f0f4f8")
         btn_frame.pack(fill=tk.X, pady=(0, 10))
 
@@ -146,12 +123,10 @@ class TimeTrackerApp:
                               font=("Segoe UI", 10, "bold"), command=self.reset_today)
         reset_btn.pack(side=tk.LEFT, padx=5)
 
-        # Status
         self.status_label = tk.Label(main_frame, text="Status: Stopped", font=("Segoe UI", 10),
                                      fg="#777", bg="#f0f4f8")
         self.status_label.pack(anchor=tk.W, pady=(0, 5))
 
-        # Table
         columns = ("App", "Time")
         self.tree = ttk.Treeview(main_frame, columns=columns, show="headings", height=12)
         self.tree.heading("App", text="Application")
@@ -160,12 +135,10 @@ class TimeTrackerApp:
         self.tree.column("Time", width=150, anchor=tk.CENTER)
         self.tree.pack(fill=tk.BOTH, expand=True, pady=10)
 
-        # Total
         self.total_label = tk.Label(main_frame, text="Total: 0h 0m", font=("Segoe UI", 12, "bold"),
                                     bg="#f0f4f8", fg="#333")
         self.total_label.pack(anchor=tk.E, pady=5)
 
-    # ---------- Control Methods ----------
     def start_tracking(self):
         if not self.running:
             self.running = True
@@ -183,7 +156,6 @@ class TimeTrackerApp:
             self.save_today_data()
 
     def refresh_table(self):
-        """Update the table with current data, sorted by time descending."""
         for row in self.tree.get_children():
             self.tree.delete(row)
 
@@ -216,7 +188,6 @@ class TimeTrackerApp:
             parts.append(f"{secs}s")
         return " ".join(parts) if parts else "0s"
 
-    # ---------- Chart ----------
     def show_chart(self):
         with self.lock:
             data = {k: v for k, v in self.times.items() if v > 0}
@@ -247,7 +218,6 @@ class TimeTrackerApp:
         canvas.draw()
         canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-    # ---------- Persistence ----------
     def load_today_data(self):
         filename = f"tracker_{date.today().isoformat()}.json"
         if os.path.exists(filename):
@@ -281,7 +251,6 @@ class TimeTrackerApp:
             self.stop_tracking()
         self.save_today_data()
         self.root.destroy()
-
 
 if __name__ == "__main__":
     root = tk.Tk()
